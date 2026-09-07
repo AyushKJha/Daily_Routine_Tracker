@@ -1,5 +1,11 @@
 # Daily — A little better, every day
 
+## Live website
+
+[Open Daily Routine Tracker](https://daily-routine-journal.onrender.com)
+
+Use this public link on your phone, tablet, or laptop. No installation is needed.
+
 A free personal routine tracker for phones, tablets, and laptops. Five editable intentions, daily notes, progress charts, light/dark themes, offline access after the first successful load, and portable backups.
 
 ## Data storage
