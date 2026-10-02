@@ -69,7 +69,12 @@ public class DailyAppTest {
             assertEquals("true", js(scenario, "!!crypto.subtle&&!!navigator.locks&&location.origin==='https://appassets.androidplatform.net'"));
             JSONObject result = async(scenario, "const s=await DailyStorage.request('/auth/create','POST',{username:'Android QA',password:'android-qa-password'});await DailyStorage.request('/auth/finish');let day=await DailyStorage.request('/habits/today');day.habits.exercise=true;day.details.exercise={note:'ANDROID_PRIVATE_NOTE'};await DailyStorage.request('/habits/today','POST',day);return s;");
             String id = result.getJSONObject("value").getString("id");
-            scenario.onActivity(a -> findWeb(a.getWindow().getDecorView()).reload());
+            js(scenario, "window.__beforeReload=true;location.reload();");
+            long reloadDeadline = System.currentTimeMillis() + 30000;
+            while (!"true".equals(js(scenario, "typeof window.__beforeReload==='undefined'&&document.readyState==='complete'"))) {
+                assertTrue("App reload timed out", System.currentTimeMillis() < reloadDeadline);
+                Thread.sleep(100);
+            }
             ready(scenario);
             async(scenario, "let locked=false;try{await DailyStorage.request('/auth/me');}catch(e){locked=e.status===401;}if(!locked)throw Error('Workspace reopened without password');return true;");
             JSONObject saved = async(scenario, "await DailyStorage.request('/auth/login','POST',{id:"+JSONObject.quote(id)+",password:'android-qa-password'});const data=await DailyStorage.request('/export');return data.days[0];");
