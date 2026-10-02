@@ -59,4 +59,12 @@ Olive and copper accents, glass navigation and onboarding, light/dark themes, an
 
 Reports provides Monday–Sunday pie/bar charts, saved records, previous/next/current week controls, and browser Print / Save PDF. Missing days are excluded from the average. Notes stay out of report analytics and CSV, while JSON backups retain notes. Identical print attempts show a confirmation. Attempt history cannot verify whether a file was saved, still exists, or was printed.
 
-Excel workbook exports, password/ID enrollment, scheduled delivery and installable-app packaging are not included in this update. Existing IndexedDB storage and backup format remain compatible.
+Excel workbook exports, password/ID enrollment, and scheduled delivery are not included in this update. Existing IndexedDB storage and backup format remain compatible.
+
+## Install Daily and download PDF reports
+
+My routine → Install Daily offers the browser install prompt when supported, or instructions for Add to Home Screen. The installed app uses the same public website address and local browser records, with no automatic cloud sync. Browser installation behavior differs by platform; native-store distribution is not included.
+
+Reports → Download PDF saves a one-page weekly report with charts and records, excluding notes. The PDF uses a high-resolution image (text is not searchable). The report has been reopened and rendered for visual verification. Browser generation, repeat-download confirmation, and installation fallback help were checked locally; native-device installation has not been tested.
+
+Download attempts are recorded in IndexedDB. Unchanged reports prompt before requesting another PDF download, including after reload. This record does not prove the download completed or that the file still exists. PDF tools are bundled for offline use after a successful online load. Third-party licensing is preserved under static/vendor.
