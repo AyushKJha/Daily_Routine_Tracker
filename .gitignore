@@ -6,3 +6,11 @@ __pycache__/
 node_modules/
 weekly-template-preview.png
 *.inspect.ndjson
+android/.gradle/
+android/**/build/
+android/local.properties
+android/app/src/main/assets/
+android/app/src/main/res/drawable/daily_icon.png
+*.p12
+*.jks
+*.keystore

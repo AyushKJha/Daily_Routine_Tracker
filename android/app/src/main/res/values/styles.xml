@@ -1,0 +1,11 @@
+<resources>
+    <style name="DailyTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#354332</item>
+        <item name="android:navigationBarColor">#354332</item>
+        <item name="android:windowBackground">#354332</item>
+        <item name="android:colorAccent">#596B43</item>
+    </style>
+</resources>
