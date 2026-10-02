@@ -108,3 +108,4 @@ h1 em,.auth-story h1 em,[data-theme=dark] .auth-story h1 em{color:var(--accent)}
 
 /* Optional account setup stays within the existing olive/copper language. */
 .account-modes{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.account-modes button{flex:1}.auth-form>p{line-height:1.6}.recovery-confirm{display:flex;align-items:center;gap:12px;margin:20px 0}.recovery-confirm input{width:auto}#recovery-dialog{max-width:560px;width:calc(100% - 32px)}#created-id,#created-recovery{font:13px ui-monospace,monospace;overflow-wrap:anywhere}#account-summary{overflow-wrap:anywhere}#authForm label[hidden]{display:none}#authForm input{min-width:0}#account-password-field,#account-id-field,#account-recovery-field{margin-top:14px}
+.auth-form>.text-button{display:block;margin-top:12px;text-align:left}
