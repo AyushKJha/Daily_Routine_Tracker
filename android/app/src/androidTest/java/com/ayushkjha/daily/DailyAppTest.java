@@ -86,7 +86,7 @@ public class DailyAppTest {
             js(scenario, "DailyAndroid.postMessage(JSON.stringify({action:'save',filename:'qa.txt',mime:'text/plain',data:btoa('native export verified')}));");
             long deadline = System.currentTimeMillis() + 15000;
             while ((!destination.exists() || destination.length()==0) && System.currentTimeMillis()<deadline) Thread.sleep(100);
-            assertEquals("native export verified", Files.readString(destination.toPath()));
+            assertEquals("native export verified", new String(Files.readAllBytes(destination.toPath()), java.nio.charset.StandardCharsets.UTF_8));
         } finally { Intents.release(); }
     }
 }
