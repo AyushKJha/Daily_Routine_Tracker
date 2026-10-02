@@ -1,0 +1,22 @@
+/* Reports read saved data only. Notes never enter the report model. */
+(()=>{
+ const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+ function monday(value){const d=new Date(value+'T12:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return dateKey(d);}
+ const input=document.querySelector('#report-week');input.value=monday(localDate());
+ let latest=null,sequence=0;
+ async function render(){latest=null;const ticket=++sequence;try{
+ const data=await DailyStorage.request('/export');if(ticket!==sequence)return;
+ const start=monday(input.value||localDate());input.value=start;
+ const dates=Array.from({length:7},(_,i)=>{const d=new Date(start+'T12:00:00');d.setDate(d.getDate()+i);return dateKey(d);});
+ const rows=dates.map(date=>{const d=data.days.find(r=>r.date===date);return {date,saved:!!d,score:d?.score??null,states:data.habits.map(h=>!d?'No check-in':d.crosses[h.id]?'Skipped':d.habits[h.id]?'Complete':'Not completed')};});
+ const saved=rows.filter(r=>r.saved),completed=rows.reduce((n,r)=>n+r.states.filter(s=>s==='Complete').length,0),missed=rows.reduce((n,r)=>n+r.states.filter(s=>s==='Not completed').length,0),skipped=rows.reduce((n,r)=>n+r.states.filter(s=>s==='Skipped').length,0);
+ latest={start,rows,labels:data.habits.map(h=>h.label)};
+ const average=saved.length?Math.round(saved.reduce((n,r)=>n+r.score,0)/saved.length):null;
+ const total=completed+missed+skipped,angle=total?completed/total*360:0,skipAngle=total?(completed+skipped)/total*360:0;
+ document.querySelector('#weekly-report').innerHTML=`<h2>Weekly routine report</h2><p>${esc(start)} to ${esc(dates[6])}</p><div class="report-summary"><div><strong>${average===null?'—':average+'%'}</strong><span>Average on ${saved.length} saved ${saved.length===1?'day':'days'}</span></div><div class="report-pie" role="img" aria-label="${completed} completed, ${skipped} skipped, ${missed} not completed" style="background:conic-gradient(#596b43 0deg ${angle}deg,#B77D5A ${angle}deg ${skipAngle}deg,#e6eadb ${skipAngle}deg 360deg)"></div><p>${completed} complete<br>${skipped} skipped<br>${missed} not completed</p></div><div class="report-bars">${rows.map(r=>`<div><small>${r.score===null?'—':r.score+'%'}</small><i style="height:${Math.max(2,(r.score||0)*1.5)}px"></i><span>${esc(r.date.slice(5))}</span></div>`).join('')}</div><div class="report-table-wrap"><table><thead><tr><th>Date</th><th>Score</th>${latest.labels.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r.date}</td><td>${r.score===null?'No check-in':r.score+'%'}</td>${r.states.map(s=>`<td>${s}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="field-help">Each completed intention adds 20 percentage points. Skipped intentions earn no points. Missing dates are excluded from the average.</p>`;
+ document.querySelector('#report-status').textContent=saved.length?'Prepared from your saved check-ins.':'No saved check-ins this week.';
+ }catch(e){document.querySelector('#report-status').textContent=e.message;}}
+ input.onchange=render;for(const [id,delta] of [['report-prev',-7],['report-next',7]])document.getElementById(id).onclick=()=>{const d=new Date((input.value||localDate())+'T12:00:00');d.setDate(d.getDate()+delta);input.value=dateKey(d);render();};document.getElementById('report-current').onclick=()=>{input.value=monday(localDate());render();};
+ document.querySelector('#report-print').onclick=async()=>{await render();if(!latest)return;const fingerprint=JSON.stringify(latest);const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(fingerprint));const key='daily-print-'+Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');if(localStorage.getItem(key)&&!confirm('You already opened printing for this report. Your browser cannot confirm whether a PDF was saved or printed. Open it again?'))return;localStorage.setItem(key,new Date().toISOString());window.print();};
+ window.DailyReports={render};
+})();

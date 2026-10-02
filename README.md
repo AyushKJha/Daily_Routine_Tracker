@@ -16,7 +16,7 @@ The current frontend is a static, device-local app. It stores your name, routine
 - Anyone using that browser profile can open the workspace. Closing the workspace is not an authentication lock; records are not encrypted by this app.
 - Clearing site data, private browsing, or browser storage eviction can remove records. Download JSON backups regularly.
 - My routine → Download backup / Restore backup transfers records between browsers or devices. Restore replaces matching dates and keeps other saved days. Invalid backups are rejected before writing.
-- Progress → Excel / Sheets CSV exports saved dates, completion percentages, five habit statuses, and notes. Open in Excel or import into Google Sheets. Select Date and Completion percent to insert a line/column chart. This is a manual export, not Google account integration.
+- Progress → Download CSV exports saved dates, completion percentages, five habit statuses, without notes. Open in Excel or import into Google Sheets. Select Date and Completion percent to insert a line/column chart. This is a manual export, not Google account integration.
 - Scores exclude skipped intentions. Concurrent saves from another tab are detected to avoid silently overwriting a newer check-in.
 
 The Coach view uses simple on-device observations from saved check-ins. The public edition has no external AI chat or medical answering service and contains no API keys.
@@ -52,3 +52,11 @@ node --check static/sw.js
 ```
 
 Server tests use disposable temporary databases. The static edition must also be checked in a browser for save/reload, restore, export, and device layouts.
+
+## Interface and weekly reports (October 2026)
+
+Olive and copper accents, glass navigation and onboarding, light/dark themes, and a brief opening with Skip and My routine → Replay intro. The opening runs once per tab session and is skipped for reduced-motion preferences.
+
+Reports provides Monday–Sunday pie/bar charts, saved records, previous/next/current week controls, and browser Print / Save PDF. Missing days are excluded from the average. Notes stay out of report analytics and CSV, while JSON backups retain notes. Identical print attempts show a confirmation. Attempt history cannot verify whether a file was saved, still exists, or was printed.
+
+Excel workbook exports, password/ID enrollment, scheduled delivery and installable-app packaging are not included in this update. Existing IndexedDB storage and backup format remain compatible.
