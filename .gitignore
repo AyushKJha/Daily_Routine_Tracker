@@ -3,3 +3,6 @@ tracker.db*
 __pycache__/
 .env
 .venv/
+node_modules/
+weekly-template-preview.png
+*.inspect.ndjson

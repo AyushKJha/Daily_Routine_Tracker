@@ -10,10 +10,12 @@ A free personal routine tracker for phones, tablets, and laptops. Five editable 
 
 ## Data storage
 
-The current frontend is a static, device-local app. It stores your name, routine, notes, and check-ins in **IndexedDB in your browser**. No cloud account, password, automatic sync, or hosted database is required. The theme preference uses localStorage.
+The current frontend is a static, device-local app. It stores your name, routine, notes, and check-ins in **IndexedDB in your browser**. Password protection is optional. There is no cloud account, automatic sync, or hosted journal database. Theme preferences and the last protected workspace ID use localStorage; passwords and decryption keys are never stored there.
 
 - Each browser/device and website address has separate records. Localhost records do not automatically appear at the public address.
-- Anyone using that browser profile can open the workspace. Closing the workspace is not an authentication lock; records are not encrypted by this app.
+- Unprotected workspaces open without a password. My routine → Add a password optionally moves existing records into an encrypted workspace after the user confirms saving their recovery details.
+- Protected workspaces receive a reusable UUID-based ID. AES-GCM encrypts the journal; a salted PBKDF2-SHA-256 key (600,000 iterations) protects the encryption key. The independent recovery key can reset a forgotten password on the browser that still holds the workspace. Closing or reloading drops the in-memory key. This is device-local protection, not server authentication or cross-device login.
+- Save the workspace ID, recovery key, and separate JSON backups. Recovery details contain no journal data and cannot restore records after browser data is cleared. JSON backups contain plaintext notes and should be kept private. Imported backups preserve the current protected workspace ID/password.
 - Clearing site data, private browsing, or browser storage eviction can remove records. Download JSON backups regularly.
 - My routine → Download backup / Restore backup transfers records between browsers or devices. Restore replaces matching dates and keeps other saved days. Invalid backups are rejected before writing.
 - Progress → Download CSV exports saved dates, completion percentages, five habit statuses, without notes. Open in Excel or import into Google Sheets. Select Date and Completion percent to insert a line/column chart. This is a manual export, not Google account integration.
@@ -59,7 +61,7 @@ Olive and copper accents, glass navigation and onboarding, light/dark themes, an
 
 Reports provides Monday–Sunday pie/bar charts, saved records, previous/next/current week controls, and browser Print / Save PDF. Missing days are excluded from the average. Notes stay out of report analytics and CSV, while JSON backups retain notes. Identical print attempts show a confirmation. Attempt history cannot verify whether a file was saved, still exists, or was printed.
 
-Excel workbook exports, password/ID enrollment, and scheduled delivery are not included in this update. Existing IndexedDB storage and backup format remain compatible.
+Reports are prepared in the app from saved check-ins for any selected week. Email delivery and background scheduled downloads are not included. Existing unprotected workspaces and JSON backups remain compatible.
 
 ## Install Daily and download PDF reports
 
@@ -68,3 +70,13 @@ My routine → Install Daily offers the browser install prompt when supported, o
 Reports → Download PDF saves a one-page weekly report with charts and records, excluding notes. The PDF uses a high-resolution image (text is not searchable). The report has been reopened and rendered for visual verification. Browser generation, repeat-download confirmation, and installation fallback help were checked locally; native-device installation has not been tested.
 
 Download attempts are recorded in IndexedDB. Unchanged reports prompt before requesting another PDF download, including after reload. This record does not prove the download completed or that the file still exists. PDF tools are bundled for offline use after a successful online load. Third-party licensing is preserved under static/vendor.
+
+## Excel reports and account validation
+
+Reports → Download Excel creates a genuine .xlsx workbook with typed dates, percentages, recalculating summaries, and two editable native Excel charts. Missing days remain blank in completion calculations; habit notes are excluded. Download history prompts before requesting an unchanged report again, separately for Excel and PDF. Browser receipts record attempts, not file existence.
+
+The workbook template was authored with @oai/artifact-tool, then populated in the browser using bundled JSZip and XML APIs. Source: tools/build-weekly-template.mjs (requires the artifact-tool authoring runtime; the deployed site requires no build). License notices for bundled libraries are under static/vendor. No journal data is embedded in the template.
+
+Run npm install --ignore-scripts, then npm test for disposable IndexedDB tests covering encryption at rest, migration, preserved notes, invalid credentials, session locking, account separation, recovery, restore identity, cancelled/concurrent migration, and stale-tab saves. Development dependencies are not required to host static/.
+
+Browser QA used a disposable local origin: legacy save/reload, opt-in migration, reusable ID login, and Excel downloads. Exported Excel reports were reopened and rendered for chart/table review. Native app installation and opening the workbook in desktop Excel have not been tested.

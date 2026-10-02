@@ -1,5 +1,5 @@
 /* Private browser storage. No network API and no credentials. */
-const DailyStorage=(()=>{
+let DailyStorage=(()=>{
  const defaults=[{id:'exercise',label:'Move your body',goal:'60 minutes of movement',category:'Wellbeing'},{id:'diet',label:'Eat with intention',goal:'Balanced meals & hydration',category:'Wellbeing'},{id:'study',label:'Make time to learn',goal:'A focused study session',category:'Learning'},{id:'dsa',label:'Solve a problem',goal:'Practice algorithms & thinking',category:'Learning'},{id:'project',label:'Build something',goal:'One meaningful step forward',category:'Creating'}];
  const ids=defaults.map(h=>h.id);let active=true;
  const dayKey=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
@@ -34,5 +34,5 @@ const DailyStorage=(()=>{
   if(path==='/chat')throw failure('This device-only edition does not send messages to an AI provider.',503);
   throw failure('Not found',404);
  }
- return {request,restore,validateBackup};
+ return {request,restore,validateBackup,defaults};
 })();

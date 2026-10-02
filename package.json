@@ -1,12 +1,15 @@
 {
   "name": "tracker",
   "version": "1.0.0",
-  "description": "",
+  "description": "Device-local routine journal with encrypted workspaces and weekly reports",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/vault.cjs"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "fake-indexeddb": "6.2.5"
+  }
 }
