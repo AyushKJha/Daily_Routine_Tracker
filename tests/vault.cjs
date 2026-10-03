@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),{webcrypto}=require('node:crypto');
 const {indexedDB}=require('fake-indexeddb');
 const queues=new Map(),locks={request(name,fn){const prior=queues.get(name)||Promise.resolve();const result=prior.catch(()=>{}).then(fn);queues.set(name,result);return result;}};
-function tab(){const c=vm.createContext({indexedDB,crypto:webcrypto,navigator:{locks},TextEncoder,TextDecoder,Uint8Array,atob,btoa,console});for(const file of ['storage.js','vault.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../static',file),'utf8'),c);return vm.runInContext('DailyStorage',c);}
+function tab(){const c=vm.createContext({indexedDB,crypto:webcrypto,navigator:{locks},TextEncoder,TextDecoder,Uint8Array,atob,btoa,console});for(const file of ['routine.js','storage.js','vault.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../static',file),'utf8'),c);return vm.runInContext('DailyStorage',c);}
 function inspect(){return new Promise((resolve,reject)=>{const r=indexedDB.open('daily-personal-workspace',1);r.onerror=()=>reject(r.error);r.onsuccess=()=>{const t=r.result.transaction('records'),s=t.objectStore('records'),out={};const q=s.openCursor();q.onsuccess=()=>{const c=q.result;if(c){out[c.key]=c.value;c.continue();}else resolve(out);};};});}
 (async()=>{
  const a=tab();await a.request('/auth/register','POST',{username:'Legacy QA'});

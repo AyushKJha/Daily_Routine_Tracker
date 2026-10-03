@@ -80,3 +80,12 @@ The workbook template was authored with @oai/artifact-tool, then populated in th
 Run npm install --ignore-scripts, then npm test for disposable IndexedDB tests covering encryption at rest, migration, preserved notes, invalid credentials, session locking, account separation, recovery, restore identity, cancelled/concurrent migration, and stale-tab saves. Development dependencies are not required to host static/.
 
 Browser QA used a disposable local origin: legacy save/reload, opt-in migration, reusable ID login, and Excel downloads. Exported Excel reports were reopened and rendered for chart/table review. Native app installation and opening the workbook in desktop Excel have not been tested.
+
+## Daily 1.1
+
+Automatic serialized check-in saves, quick starter routines, up to 12 custom habits with weekdays and pauses, historical plan snapshots, clearer saved-day insights, and weekly backup prompts. Legacy scores remain intact. Excel reports expand for custom habits; PDF habit tables span pages as needed. Missing dates remain unknown, not failures.
+
+Android reminders are opt-in, respect quiet hours, include snooze, and reschedule after reboot/time-zone changes. Android may delay inexact alarms. Browser reminders require the page to stay open. APK 1.1 is signed with the same release key and checks the existing website for future updates; Android requires installation approval. Physical-device behavior remains untested.
+
+Optional encrypted Supabase backup integration is prepared under cloud/. No hosted project is configured, so cloud backup remains disabled. Tokens stay in session memory, uploads require opt-in, remote revisions prevent silent overwrite, and restores require the workspace password. Hosted RLS/SMTP needs staging verification when configured.
+

@@ -1,5 +1,5 @@
 from pathlib import Path
-import shutil
+import shutil,re
 root=Path(__file__).resolve().parent
 source=root.parent/'static'
 assets=root/'app/src/main/assets'
@@ -17,6 +17,8 @@ s=s.replace('Your records stay in this browser on this device.','Your records st
 s=s.replace('clearing browser data or using private browsing can erase them.','uninstalling or clearing app data can erase them.')
 s=s.replace('on this browser','inside this app').replace('in this browser','inside this app').replace('There is no automatic sync. Your workspace ID opens the records held by this browser.','There is no automatic sync. Your workspace ID opens the records held by this app.')
 s=s.replace('cleared browser data','cleared app data')
+cloud=re.search(r"url\s*:\s*['\"](https://[a-z0-9-]+\.supabase\.co)['\"]",(source/'cloud-config.js').read_text(encoding='utf-8'))
+if cloud:s=s.replace("connect-src 'self' blob:","connect-src 'self' blob: "+cloud.group(1))
 p.write_text(s,encoding='utf-8')
 p=assets/'app.js';s=p.read_text(encoding='utf-8').replace("if('serviceWorker' in navigator)","if(!window.DailyAndroid && 'serviceWorker' in navigator)");p.write_text(s,encoding='utf-8')
 icons=root/'app/src/main/res/drawable';icons.mkdir(parents=True,exist_ok=True);shutil.copyfile(source/'icon-512.png',icons/'daily_icon.png')

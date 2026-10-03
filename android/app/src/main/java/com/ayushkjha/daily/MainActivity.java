@@ -36,6 +36,9 @@ public final class MainActivity extends Activity {
     private static final int IMPORT_FILE = 1, EXPORT_FILE = 2;
     private final ExecutorService io = Executors.newSingleThreadExecutor();
     private WebView web;
+    private String cloudOrigin="";
+    private JSONObject reminderRequest;
+    private JavaScriptReplyProxy reminderReply;
     private byte[] pendingExport;
     private JavaScriptReplyProxy exportReply;
     private ValueCallback<Uri[]> importReply;
@@ -43,6 +46,8 @@ public final class MainActivity extends Activity {
     @SuppressLint("SetJavaScriptEnabled")
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        try { String config=new String(readStream(getAssets().open("cloud-config.js")),StandardCharsets.UTF_8);java.util.regex.Matcher matcher=java.util.regex.Pattern.compile("url\\s*:\\s*['\"](https://[a-z0-9-]+\\.supabase\\.co)['\"]").matcher(config);if(matcher.find())cloudOrigin=matcher.group(1); } catch(Exception ignored) {}
+        ReminderManager.channel(this);ReminderManager.schedule(this);
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xff354332);
         root.setOnApplyWindowInsetsListener((v, insets) -> {
@@ -69,6 +74,8 @@ public final class MainActivity extends Activity {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 WebResourceResponse local = assets.shouldInterceptRequest(request.getUrl());
                 if (local != null) return local;
+                Uri uri=request.getUrl();
+                if(!request.isForMainFrame()&&!cloudOrigin.isEmpty()&&cloudOrigin.equals(uri.getScheme()+"://"+uri.getHost())&&(uri.getPath().startsWith("/auth/v1/")||uri.getPath().startsWith("/rest/v1/")))return null;
                 return new WebResourceResponse("text/plain", "UTF-8", 404, "Not Found", Collections.emptyMap(),
                         new ByteArrayInputStream("Not available in the offline app".getBytes(StandardCharsets.UTF_8)));
             }
@@ -107,7 +114,11 @@ public final class MainActivity extends Activity {
                     if (!mainFrame || !"https".equals(origin.getScheme()) || !"appassets.androidplatform.net".equals(origin.getHost())) return;
                     try {
                         JSONObject request = new JSONObject(message.getData());
-                        if ("save".equals(request.optString("action"))) save(request, reply);
+                        if ("reminder".equals(request.optString("action"))) configureReminder(request,reply);
+                        else if ("reminderStatus".equals(request.optString("action"))) reminderResult(reply,ReminderManager.enabled(this)?"Android reminder is enabled. Delivery may be delayed by battery saving.":"Android reminders are off.");
+                        else if ("snooze".equals(request.optString("action"))) { ReminderManager.snooze(this);reminderResult(reply,ReminderManager.enabled(this)?"Snoozed for 30 minutes, respecting quiet hours.":"Enable reminders first."); }
+                        else if ("checkUpdate".equals(request.optString("action"))) checkUpdate(reply);
+                        else if ("save".equals(request.optString("action"))) save(request, reply);
                         else if ("print".equals(request.optString("action"))) {
                             PrintManager manager = (PrintManager) getSystemService(PRINT_SERVICE);
                             manager.print("Daily weekly report", web.createPrintDocumentAdapter("Daily weekly report"),
@@ -116,6 +127,30 @@ public final class MainActivity extends Activity {
                     } catch (Exception e) { reply.postMessage("Could not prepare the export. Please try again."); }
                 });
         web.loadUrl(ORIGIN + "/assets/index.html");
+    }
+
+    private static byte[] readStream(java.io.InputStream input) throws java.io.IOException {
+        try(java.io.InputStream source=input;java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream()) { byte[] buffer=new byte[4096];int count;while((count=source.read(buffer))!=-1){out.write(buffer,0,count);if(out.size()>100000)throw new java.io.IOException("Response too large");}return out.toByteArray(); }
+    }
+    private void reminderResult(JavaScriptReplyProxy reply,String text) {
+        try { JSONObject result=new JSONObject();result.put("kind","reminder");result.put("enabled",ReminderManager.enabled(this));result.put("message",text);reply.postMessage(result.toString()); } catch(Exception ignored) { }
+    }
+    private void configureReminder(JSONObject request,JavaScriptReplyProxy reply) throws Exception {
+        ReminderManager.minute(request.getString("time"));ReminderManager.minute(request.getString("quietStart"));ReminderManager.minute(request.getString("quietEnd"));
+        if(request.optBoolean("enabled")&&android.os.Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED){reminderRequest=request;reminderReply=reply;requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},10);return;}
+        ReminderManager.prefs(this).edit().putBoolean("enabled",request.optBoolean("enabled")).putInt("minute",ReminderManager.minute(request.getString("time"))).putInt("quietStart",ReminderManager.minute(request.getString("quietStart"))).putInt("quietEnd",ReminderManager.minute(request.getString("quietEnd"))).apply();ReminderManager.schedule(this);
+        reminderResult(reply,request.optBoolean("enabled")?"Reminder saved. Android may delay it during battery saving. Quiet hours are respected.":"Reminders turned off.");
+    }
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results) {
+        super.onRequestPermissionsResult(request,permissions,results);
+        if(request==10&&reminderReply!=null){try{if(results.length>0&&results[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)configureReminder(reminderRequest,reminderReply);else{ReminderManager.prefs(this).edit().putBoolean("enabled",false).apply();ReminderManager.schedule(this);reminderResult(reminderReply,"Notifications were not allowed. Reminders remain off.");}}catch(Exception ignored){}reminderReply=null;reminderRequest=null;}
+    }
+    private void checkUpdate(JavaScriptReplyProxy reply) {
+        io.execute(()->{try{java.net.HttpURLConnection connection=(java.net.HttpURLConnection)new java.net.URL("https://daily-routine-journal.onrender.com/app-update.json").openConnection();connection.setConnectTimeout(10000);connection.setReadTimeout(10000);connection.setInstanceFollowRedirects(false);
+            JSONObject result;try{if(connection.getResponseCode()!=200)throw new java.io.IOException();result=new JSONObject(new String(readStream(connection.getInputStream()),StandardCharsets.UTF_8));}finally{connection.disconnect();}
+            String url=result.optString("url");if(!url.matches("https://github\\.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v[0-9.]+/Daily-[0-9.]+\\.apk"))throw new java.io.IOException();
+            result.put("kind","update");result.put("available",result.optInt("versionCode")>BuildConfig.VERSION_CODE);runOnUiThread(()->{try{reply.postMessage(result.toString());}catch(Exception ignored){}});
+        }catch(Exception error){runOnUiThread(()->{try{reply.postMessage("Update check unavailable. Your offline journal still works.");}catch(Exception ignored){}});}});
     }
 
     private static boolean isLocal(Uri uri) {

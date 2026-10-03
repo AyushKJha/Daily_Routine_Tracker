@@ -4,7 +4,7 @@
   "description": "Device-local routine journal with encrypted workspaces and weekly reports",
   "main": "index.js",
   "scripts": {
-    "test": "node tests/vault.cjs"
+    "test": "node tests/vault.cjs && node tests/routines.cjs"
   },
   "keywords": [],
   "author": "",

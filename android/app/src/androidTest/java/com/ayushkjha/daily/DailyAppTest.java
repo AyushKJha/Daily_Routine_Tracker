@@ -26,6 +26,24 @@ import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class DailyAppTest {
+    @Test public void reminderTimingRespectsQuietHoursAndLocalDate() {
+        java.time.ZonedDateTime now=java.time.ZonedDateTime.parse("2026-10-03T21:00:00+05:30[Asia/Kolkata]");
+        assertTrue(ReminderManager.quiet(1380,1320,480));
+        assertFalse(ReminderManager.quiet(720,1320,480));
+        assertFalse(ReminderManager.quiet(720,0,0));
+        long at=ReminderManager.next(now,1380,1320,480);
+        assertEquals(java.time.ZonedDateTime.parse("2026-10-04T08:00:00+05:30[Asia/Kolkata]").toInstant().toEpochMilli(),at);
+        java.time.ZonedDateTime dst=java.time.ZonedDateTime.parse("2026-03-07T21:00:00-05:00[America/New_York]");
+        assertEquals(java.time.ZonedDateTime.parse("2026-03-08T08:00:00-04:00[America/New_York]").toInstant().toEpochMilli(),ReminderManager.next(dst,1380,1320,480));
+    }
+    @Test public void rapidHabitTapsAutosaveWithCustomPlan() throws Exception {
+        try(ActivityScenario<MainActivity> scenario=ActivityScenario.launch(MainActivity.class)) {
+            ready(scenario);
+            async(scenario,"await DailyStorage.request('/auth/register','POST',{username:'Autosave QA'});const prefs=[{id:'read',label:'Read',goal:'One page'},{id:'walk',label:'Walk',goal:'Ten minutes'}];await DailyStorage.request('/preferences','PUT',{habits:prefs});user=await DailyStorage.request('/auth/me');await start();document.querySelector('[data-complete=read]').click();document.querySelector('[data-complete=walk]').click();await DailyUpgrade.flush();return await DailyStorage.request('/habits/today');");
+            JSONObject saved=async(scenario,"return await DailyStorage.request('/habits/today');").getJSONObject("value");
+            assertEquals(100,saved.getInt("score"));assertTrue(saved.getJSONObject("habits").getBoolean("read"));assertTrue(saved.getJSONObject("habits").getBoolean("walk"));
+        }
+    }
     private WebView findWeb(View view) {
         if (view instanceof WebView) return (WebView) view;
         if (view instanceof ViewGroup) for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
@@ -44,7 +62,7 @@ public class DailyAppTest {
     private void ready(ActivityScenario<MainActivity> scenario) throws Exception {
         long deadline = System.currentTimeMillis() + 30000;
         while (System.currentTimeMillis() < deadline) {
-            if ("true".equals(js(scenario, "typeof DailyStorage!=='undefined'&&typeof DailyAndroid!=='undefined'"))) return;
+            if ("true".equals(js(scenario, "document.readyState==='complete'&&typeof DailyUpgrade!=='undefined'&&typeof DailyStorage!=='undefined'&&typeof DailyAndroid!=='undefined'"))) return;
             Thread.sleep(100);
         }
         fail("Offline app did not load");

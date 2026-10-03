@@ -17,7 +17,7 @@
  const keyName=id=>'vault:'+id;
  const locked=async(id,fn)=>{if(!navigator.locks)throw error('This browser cannot safely update protected workspaces. Use a current browser.');return navigator.locks.request('daily-vault:'+id,fn);};
  const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
- const ids=legacy.defaults.map(h=>h.id),score=d=>ids.filter(id=>d.habits[id]&&!d.crosses[id]).length*20;
+ const ids=legacy.defaults.map(h=>h.id),score=d=>DailyRoutine.score(d);
  async function prepare(body){validPassword(body.password);const username=String(body.username||'').trim();if(!username||username.length>60)throw error('Enter a name up to 60 characters.');
   const id='daily-'+crypto.randomUUID(),salt=b64(crypto.getRandomValues(new Uint8Array(16))),secret=crypto.getRandomValues(new Uint8Array(32)),recoveryBytes=crypto.getRandomValues(new Uint8Array(32));
   const recovery=[...recoveryBytes].map(x=>x.toString(16).padStart(2,'0')).join(''),key=await rawKey(secret),pw=await passwordKey(body.password,salt);
@@ -41,15 +41,17 @@
    else if(path==='/habits/today'){const date=today(),old=days.find(d=>d.date===date);if(method==='GET')result=old||{date,habits:{},crosses:{},details:{},score:0,save_count:0,revision:null};else{legacy.validateBackup({days:[body]});if(body.date!==date)throw error('The date changed. Refresh before saving.');if((old?.revision??null)!==body.revision)throw error('Another tab changed this day. Reload before editing.',409);const next={...body,score:score(body),revision:crypto.randomUUID(),saved_at:new Date().toISOString(),save_count:(old?.save_count||0)+1};data.days=days.filter(d=>d.date!==date).concat(next);changed=true;result={ok:true,score:next.score,revision:next.revision};}}
    else if(path==='/habits/history')result=days.slice(0,90);
    else if(path==='/export')result={format:'daily-backup',version:1,exported_at:new Date().toISOString(),profile:data.profile,habits:data.habits,days:[...days].reverse()};
-   else if(path==='/restore'){legacy.validateBackup(body);const imported=new Set(body.days.map(d=>d.date));data.days=days.filter(d=>!imported.has(d.date)).concat(body.days.map(d=>({...d,score:score(d),revision:crypto.randomUUID()})));if(body.habits)data.habits=body.habits;if(body.profile)data.profile.username=body.profile.username;changed=true;result=true;}
+   else if(path==='/restore'){legacy.validateBackup(body);const imported=new Set(body.days.map(d=>d.date));data.days=days.filter(d=>!imported.has(d.date)).concat(body.days.map(d=>({...d,score:d.score??score(d),revision:crypto.randomUUID()})));if(body.habits)data.habits=body.habits;if(body.profile)data.profile.username=body.profile.username;changed=true;result=true;}
+   else if(path==='/cloud/snapshot')result=JSON.parse(JSON.stringify(row));
    else if(path==='/reports/log'){if(!/^[a-f0-9]{64}$/.test(body?.fingerprint||'')||!['pdf','xlsx'].includes(body.kind))throw error('Invalid report receipt.');data.receipts??={};const key=body.kind+':'+body.fingerprint;if(method==='POST'){data.receipts[key]={attempted_at:new Date().toISOString(),filename:String(body.filename||'').slice(0,160)};changed=true;}result=data.receipts[key]||null;}
-   else if(path==='/stats'){let streak=0;const dates=new Set(days.map(d=>d.date)),d=new Date();if(!dates.has(today()))d.setDate(d.getDate()-1);while(dates.has(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)){streak++;d.setDate(d.getDate()-1);}result={days:days.length,avg:days.length?Math.round(days.reduce((n,d)=>n+d.score,0)/days.length):0,streak,perfect:days.filter(d=>d.score===100).length,best:Math.max(0,...days.map(d=>d.score))};}
+   else if(path==='/stats')result=DailyRoutine.metrics(days);
    else if(path==='/coach'){const recent=days.slice(0,7),counts=ids.map(id=>({id,count:recent.filter(d=>d.habits[id]&&!d.crosses[id]).length})).sort((a,b)=>a.count-b.count);result=recent.length?{habit_id:counts[0].id,message:`You completed this intention on ${counts[0].count} of your last ${recent.length} saved days. Choose a smaller step you can repeat tomorrow.`}:{message:'Save your first check-in, then choose one small step for tomorrow.'};}
    else if(path==='/chat/status')result={configured:false};else throw error('Not found',404);
    if(changed){if(session!==current)throw error('Workspace was locked before saving.',401);row.payload=await seal(current.key,enc.encode(JSON.stringify(data)),current.id);await write(keyName(current.id),row);}return result;
   });
  }
  DailyStorage={validateBackup:legacy.validateBackup,restore:b=>session?vaultRequest('/restore','POST',b):legacy.restore(b),async request(path,method='GET',body){
+  if(path==='/cloud/import'){const row=body?.envelope;if(!row||row.version!==1||!/^daily-[a-f0-9-]{36}$/.test(row.id)||typeof row.salt!=='string'||!['password','recovery','payload'].every(k=>row[k]&&typeof row[k].iv==='string'&&typeof row[k].data==='string')||JSON.stringify(row).length>14000000)throw error('Invalid encrypted backup.');await locked(row.id,()=>write(keyName(row.id),row));if(session?.id===row.id)session=null;return {id:row.id};}
   if(path==='/auth/create')return prepare(body);
   if(path==='/auth/finish')return finish();
   if(path==='/auth/cancel'){pending=null;return {ok:true};}
