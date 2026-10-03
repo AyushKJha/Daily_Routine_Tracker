@@ -15,7 +15,7 @@
    c.replaceChildren();c.removeAttribute('t');if(value===null)return;
    if(typeof value==='number'){const v=sheet.createElementNS(ns,'v');v.textContent=String(value);c.append(v);}else{c.setAttribute('t','inlineStr');const is=sheet.createElementNS(ns,'is'),t=sheet.createElementNS(ns,'t');t.textContent=String(value);is.append(t);c.append(is);}
   }
-  const saved=model.rows.filter(r=>r.saved),average=saved.length?saved.reduce((n,r)=>n+r.score,0)/saved.length/100:null;
+  const saved=model.rows.filter(r=>r.saved&&r.score!==null),average=saved.length?saved.reduce((n,r)=>n+r.score,0)/saved.length/100:null;
   cell('A3',`Week beginning ${model.start}`);cell('B5',null,saved.length);cell('E5',null,average);
   const states=['Complete','Skipped','Not completed'],counts=states.map(s=>model.rows.reduce((n,r)=>n+r.states.filter(x=>x===s).length,0));counts.forEach((n,i)=>cell('B'+(8+i),null,n));
   for(let n=3;n<=7;n++){cell(column(n)+'12',null);for(let r=13;r<=19;r++)cell(column(n)+r,null);}

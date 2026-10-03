@@ -51,7 +51,7 @@
   });
  }
  DailyStorage={validateBackup:legacy.validateBackup,restore:b=>session?vaultRequest('/restore','POST',b):legacy.restore(b),async request(path,method='GET',body){
-  if(path==='/cloud/import'){const row=body?.envelope;if(!row||row.version!==1||!/^daily-[a-f0-9-]{36}$/.test(row.id)||typeof row.salt!=='string'||!['password','recovery','payload'].every(k=>row[k]&&typeof row[k].iv==='string'&&typeof row[k].data==='string')||JSON.stringify(row).length>14000000)throw error('Invalid encrypted backup.');await locked(row.id,()=>write(keyName(row.id),row));if(session?.id===row.id)session=null;return {id:row.id};}
+  if(path==='/cloud/import'){const row=body?.envelope;if(!row||row.version!==1||!/^daily-[a-f0-9-]{36}$/.test(row.id)||typeof row.salt!=='string'||!['password','recovery','payload'].every(k=>row[k]&&typeof row[k].iv==='string'&&typeof row[k].data==='string')||JSON.stringify(row).length>14000000)throw error('Invalid encrypted backup.');await locked(row.id,()=>write(keyName(row.id),row));session=null;pending=null;closed=true;return {id:row.id};}
   if(path==='/auth/create')return prepare(body);
   if(path==='/auth/finish')return finish();
   if(path==='/auth/cancel'){pending=null;return {ok:true};}
