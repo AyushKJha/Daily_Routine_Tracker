@@ -2,9 +2,9 @@
 
 An installable Android app bundling the Daily tracker, olive/copper theme, offline journal, optional encrypted workspaces, and PDF/Excel reports. Minimum Android8.0 (API26), with a current Android System WebView.
 
-The app uses a native Activity and AndroidX WebViewAssetLoader to load bundled code at a fixed HTTPS local origin. It does not depend on the public site being available. The native message channel accepts only the bundled origin's main frame; remote WebView requests are blocked, external HTTPS links open in the system browser, and a restrictive content policy prevents embedded frames. There are no analytics or cloud journal requests.
+The app uses a native Activity and AndroidX WebViewAssetLoader to load bundled code at a fixed HTTPS local origin. It does not depend on the public site being available. The native message channel accepts only the bundled origin's main frame; remote WebView requests are blocked, external HTTPS links open in the system browser, and a restrictive content policy prevents embedded frames. There are no analytics requests. Optional encrypted cloud backup uses the configured Supabase authentication and database endpoints only.
 
-File exports use Android's Create Document picker; users choose where to save. Restore backup uses the Open Document picker. No broad filesystem/camera/microphone permissions are requested. Android cloud backups and device transfer are disabled; portable JSON backups are explicit and include plaintext notes. Uninstalling or clearing app data erases app records. App and website records are separate; transfer with a JSON backup, not a shared login.
+File exports use Android's Create Document picker; users choose where to save. Restore backup uses the Open Document picker. No broad filesystem/camera/microphone permissions are requested. Cloud backup is optional and user initiated. It stores only encrypted workspace envelopes; email sign-in does not unlock the journal. Cross-device restore also requires the workspace password or recovery key. Portable JSON backups are explicit and include plaintext notes. Uninstalling or clearing app data erases app records. App and website records are separate; transfer with a JSON backup, not a shared login.
 
 ## Build
 
@@ -23,10 +23,14 @@ The release APK must be signed before installation. Release keys are kept outsid
 Bundled Gradle wrapper: Apache2 license in GRADLE-LICENSE. AndroidX WebKit uses Apache2; web export library notices are copied from static/vendor into the APK assets. No Play Store listing is created by this build.
 
 
+## Version 1.2
+
+VersionCode 3. Includes optional encrypted Supabase backup, matching the website, and checks the same Render update manifest for future signed APK releases. Install over earlier versions; retain the existing app data and signing identity. The app still requires user approval to install updates.
+
 ## Version 1.1
 
 Same signing identity as 1.0, versionCode 2. Install over the existing app; do not uninstall. Automatic saving is serialized with optimistic day revisions. This build requests notification permission only when the user enables reminders, schedules inexact local alarms, respects quiet hours, provides 30-minute snooze, and reschedules on reboot/time/time-zone changes. Android battery restrictions can delay delivery. It contains no journal content in notifications.
 
 The app checks the original Render website's app-update.json on opening and offers a direct APK download when a newer versionCode exists. Android requires user approval to install; silent replacement is not supported. The original 1.0 APK has no updater, so its users must install 1.1 manually once. Future updates must use the same signing key and higher versionCode. Update links are restricted to this GitHub repository's Android release assets.
 
-Cloud backup is disabled by default. See cloud/README.md for configuration and required hosted validation. Only the configured Supabase origin's authentication/database endpoints are allowed for subresource requests; its origin is added to the native content policy at build time. Remote page navigation remains external to the app.
+Cloud backup is available when the public Supabase URL and publishable key are configured. See cloud/README.md for the security model and hosted authorization checks. Only the configured Supabase origin's authentication/database endpoints are allowed for subresource requests; its origin is added to the native content policy at build time. Remote page navigation remains external to the app.

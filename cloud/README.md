@@ -1,6 +1,6 @@
 # Optional encrypted cloud backup setup
 
-This release works locally without any provider account. Cloud backup is disabled until a project is configured. No paid service has been provisioned.
+The hosted Supabase project is configured on the free plan. The public website and Android app can use optional encrypted cloud backup. Email OTP connects an account; it does not decrypt journal data.
 
 1. Create a Supabase project and run `supabase.sql` in its SQL editor.
 2. Enable Email authentication. In the Magic Link email template, send the numeric `{{ .Token }}` rather than a link. Configure production SMTP and appropriate OTP rate limits before inviting users. Cloud sign-in uses email OTP; workspace passwords are never sent to Supabase.
@@ -17,4 +17,4 @@ The cloud stores only the existing AES-GCM encrypted envelope, random workspace 
 
 Users explicitly connect cloud backup for each session and opt into uploads after changes. The client retains only a per-account remote revision locally; cloud access tokens stay in memory and expire. Expired sessions stop uploads. Cloud restores replace that workspace after explicit confirmation and relock it. Unknown remote revisions fail safely; no last-write-wins merge. Restore the cloud copy after taking a local backup to reconcile different devices. Local-only records are unaffected by an unavailable provider.
 
-This is prepared integration, not active cloud sync, and it does not implement background Android sync or unattended web sync. Apply a data retention policy and a user deletion flow before offering this service broadly.
+Cloud backup is user initiated and encrypted. Automatic uploads operate only while a workspace is open and the user opts in; background Android sync is not implemented. There is no in-app cloud-account deletion flow yet. Do not promote this as a managed multi-user service until users have a documented way to export and remove cloud accounts and backups.

@@ -4,7 +4,7 @@
  let loader;
  async function zipLibrary(){if(window.JSZip)return window.JSZip;if(!loader)loader=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/jszip.min.js';s.onload=()=>resolve(window.JSZip);s.onerror=()=>{loader=null;reject(new Error('Could not load Excel tools. Connect once and try again.'));};document.head.append(s);});return loader;}
  async function xlsx(model){
-  const Zip=await zipLibrary(),response=await fetch('./vendor/weekly-template.xlsx?v=release11');if(!response.ok)throw new Error('Could not load the Excel report template.');
+  const Zip=await zipLibrary(),response=await fetch('./vendor/weekly-template.xlsx?v=release12');if(!response.ok)throw new Error('Could not load the Excel report template.');
   const zip=await Zip.loadAsync(await response.arrayBuffer()),parse=t=>new DOMParser().parseFromString(t,'application/xml'),serialize=d=>new XMLSerializer().serializeToString(d);
   const column=n=>{let value='';while(n){n--;value=String.fromCharCode(65+n%26)+value;n=Math.floor(n/26);}return value;};const helper=Math.max(9,model.labels.length+4),helperDate=column(helper),helperScore=column(helper+1),last=column(model.labels.length+2);
   const sheet=parse(await zip.file('xl/worksheets/sheet1.xml').async('string'));

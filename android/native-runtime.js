@@ -17,7 +17,7 @@
  window.print=()=>DailyAndroid.postMessage(JSON.stringify({action:'print'}));
  document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('[data-android-download]').forEach(el=>el.hidden=true);const install=document.querySelector('#install-app');if(install){install.textContent='Check for app updates';install.onclick=()=>DailyAndroid.postMessage(JSON.stringify({action:'checkUpdate'}));}DailyAndroid.postMessage(JSON.stringify({action:'checkUpdate'}));
-  const text=document.querySelector('#install-status');if(text)text.textContent='Daily for Android · 1.1.0 · works offline';
+  const text=document.querySelector('#install-status');if(text)text.textContent='Daily for Android · 1.2.0 · works offline';
   document.querySelector('#local-data-help').textContent='Your records stay inside this app on this phone. They do not sync with the website. Export a JSON backup before uninstalling or clearing app data. You can restore a website backup in My routine.';
   const panel=document.querySelector('#account-summary')?.parentElement;
   if(panel){const p=document.createElement('p');p.className='field-help';p.textContent='To move records from the website, download its JSON backup and choose Restore backup here. Keep your backups and recovery keys private.';panel.append(p);}

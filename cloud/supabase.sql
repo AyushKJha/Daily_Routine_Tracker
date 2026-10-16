@@ -12,6 +12,7 @@ create table if not exists public.daily_vaults (
 alter table public.daily_vaults enable row level security;
 revoke all on public.daily_vaults from anon,authenticated;
 grant select on public.daily_vaults to authenticated;
+drop policy if exists "Read own encrypted vaults" on public.daily_vaults;
 create policy "Read own encrypted vaults" on public.daily_vaults
  for select to authenticated using (owner_id=auth.uid());
 
@@ -20,7 +21,9 @@ returns jsonb language plpgsql security definer set search_path=public,pg_temp a
 declare current_version bigint; new_version bigint; account uuid:=auth.uid();
 begin
  if account is null then raise exception 'Sign in required'; end if;
- if workspace_id !~ '^daily-[a-f0-9-]{36}$' or encrypted_envelope->>'id' is distinct from workspace_id
+ if expected_version is null or expected_version < 0 then raise exception 'Invalid expected version'; end if;
+ if workspace_id is null or encrypted_envelope is null
+  or workspace_id !~ '^daily-[a-f0-9-]{36}$' or encrypted_envelope->>'id' is distinct from workspace_id
   or encrypted_envelope->>'version' is distinct from '1' or octet_length(encrypted_envelope::text)>=14000000
   or jsonb_typeof(encrypted_envelope->'payload') is distinct from 'object'
   or jsonb_typeof(encrypted_envelope->'password') is distinct from 'object'
