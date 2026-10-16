@@ -9,6 +9,8 @@ A personal routine journal for planning habits, saving daily check-ins, and look
 
 **JavaScript · IndexedDB · Web Crypto · Android / Java**
 
+> **[Step-by-step user guide (PDF)](docs/USER_GUIDE.pdf)**
+
 ## What you can do
 
 - Create up to 12 habits with scheduled weekdays and pauses.
