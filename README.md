@@ -9,8 +9,6 @@ A personal routine journal for planning habits, saving daily check-ins, and look
 
 **JavaScript · IndexedDB · Web Crypto · Android / Java**
 
-> **[Step-by-step user guide (PDF)](docs/USER_GUIDE.pdf)**
-
 ## What you can do
 
 - Create up to 12 habits with scheduled weekdays and pauses.
@@ -19,6 +17,15 @@ A personal routine journal for planning habits, saving daily check-ins, and look
 - Add an optional password to encrypt a local workspace.
 - Use the web app offline after its first successful load.
 - Install the Android app for local reminders, snooze, and quiet hours.
+
+## Start your routine
+
+1. Open the website and create a workspace. Save the workspace ID and recovery details shown during setup.
+2. Add habits, select the weekdays you want, and save the routine.
+3. Check in during the day and add an optional note. Use the weekly view to review progress and export a report.
+4. In **Settings**, download a JSON backup before moving devices or clearing browser data. Restore that backup on the destination device; web and Android records are separate.
+
+The Android APK is available from the download link above. Reminders are configured in Settings; browser reminders require the page to remain open, and Android delivery can be delayed by the operating system.
 
 ## Try it
 
