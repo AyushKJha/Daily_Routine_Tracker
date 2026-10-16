@@ -1,4 +1,4 @@
-<img src="docs/banner.svg" alt="Project overview" width="100%">
+<img src="docs/banner.svg" alt="Daily Routine Tracker project illustration" width="100%">
 
 # Daily
 ### A little better, every day.
