@@ -23,6 +23,10 @@ The release APK must be signed before installation. Release keys are kept outsid
 Bundled Gradle wrapper: Apache2 license in GRADLE-LICENSE. AndroidX WebKit uses Apache2; web export library notices are copied from static/vendor into the APK assets. No Play Store listing is created by this build.
 
 
+## Version 1.3
+
+VersionCode 4. The Android bottom navigation raises the selected icon inside a softly shadowed socket. The dashboard uses the same staggered card entrance, score count-up, and chart reveal as the website, with the existing olive-and-copper colors. Reduced-motion preferences disable the animation. Install over the earlier version with the same signing identity to retain local records; Android still asks the user before installing updates.
+
 ## Version 1.2
 
 VersionCode 3. Includes optional encrypted Supabase backup, matching the website, and checks the same Render update manifest for future signed APK releases. Install over earlier versions; retain the existing app data and signing identity. The app still requires user approval to install updates.
