@@ -1,15 +1,21 @@
 <img src="docs/banner.svg" alt="Daily Routine Tracker project illustration" width="100%">
 
+
 # Daily
 ### A little better, every day.
 
-[Open the website](https://daily-routine-journal.onrender.com) · [Download Android APK · 1.3.0](https://github.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v1.3.0/Daily-1.3.0.apk)
+
+[Open the website](https://daily-routine-journal.onrender.com) · [Download Android APK · 1.4.0](https://github.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v1.4.0/Daily-1.4.0.apk)
+
 
 A personal routine journal for planning habits, saving daily check-ins, and looking back at progress.
 
+
 **JavaScript · IndexedDB · Web Crypto · Supabase · Android / Java**
 
+
 ## What you can do
+
 
 - Create up to 12 habits with scheduled weekdays and pauses.
 - Save check-ins and notes, with automatic saves and historical routine snapshots.
@@ -19,51 +25,45 @@ A personal routine journal for planning habits, saving daily check-ins, and look
 - Install the Android app for local reminders, snooze, and quiet hours.
 - Optionally back up encrypted workspaces to your cloud account.
 
+
 ## Try it
+
 
 The website needs no installation. On supported browsers, use **My routine → Install Daily** to add it to your home screen. Android requires **8+** and an up-to-date Android System WebView. Install APK updates over the existing app to retain records.
 
+
 Web and Android records are separate local workspaces. JSON backup can transfer records between them. Uninstalling the app or clearing browser data removes local records. Keep backups somewhere safe.
+
 
 ## How data works
 
+
 Journal data stays in IndexedDB on your device. Optional cloud backup stores only encrypted workspace envelopes in Supabase. Email sign-in identifies your cloud account; your workspace password (or recovery key) is still required to unlock the journal on each device. Uploads are opt-in and occur while the app is open. Devices use revision checks to prevent silent overwrites.
+
 
 JSON backups include plaintext notes. CSV, PDF, and Excel reports exclude notes. The coach uses saved check-ins on the device; it is not an external AI service.
 
+
 The usage query in [cloud/usage.sql](cloud/usage.sql) counts cloud accounts and backup activity, not offline-only users or app installations.
+
 
 ## Run locally
 
+
 Use Python 3.10+ from the repository root:
+
 
 ```sh
 python -m http.server 8000 --directory static --bind 127.0.0.1
 ```
 
+
 Open http://localhost:8000. Publish only `static/` for web hosting; no build step is required.
 
+
 ## Project map
+
 
 | Path | Purpose |
 | --- | --- |
 | [static/](static/) | Web interface, storage, encryption, reports, and offline cache |
-| [android/](android/) | Native wrapper, packaged assets, exports, and reminders |
-| [android/README.md](android/README.md) | Android build instructions |
-| [cloud/](cloud/) | Optional encrypted backup integration and SQL checks |
-| [tests/](tests/) | Routine and encrypted-storage checks |
-| [server.py](server.py) | Retained earlier backend; the static app does not use its database |
-
-## Development checks
-
-```sh
-npm install --ignore-scripts
-npm test
-python -m unittest -v test_server
-```
-
-These cover different components; passing server tests does not verify the browser interface. See [technical notes](TECHNICAL_NOTES.md) for storage behavior, export details, and previous verification scope.
-
-## Current boundaries
-
-Cloud access needs an email account and an encrypted workspace password; email alone cannot recover the journal. Automatic background Android sync is not implemented. Android reminders may be delayed by the OS; physical-device behavior still needs verification.
