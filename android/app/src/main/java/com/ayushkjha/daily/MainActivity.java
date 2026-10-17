@@ -69,7 +69,7 @@ public final class MainActivity extends Activity {
         updateDownloadId=getPreferences(MODE_PRIVATE).getLong("updateDownloadId",-1);
         updateVersionName=getPreferences(MODE_PRIVATE).getString("updateVersionName","");
         updateReceiver=new BroadcastReceiver(){@Override public void onReceive(Context c,Intent i){if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(i.getAction())&&i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID,-1)==updateDownloadId)showUpdateReady();}};
-        if(android.os.Build.VERSION.SDK_INT>=33)registerReceiver(updateReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),Context.RECEIVER_NOT_EXPORTED);else registerReceiver(updateReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        androidx.core.content.ContextCompat.registerReceiver(this,updateReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
