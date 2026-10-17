@@ -3,45 +3,41 @@
 # Daily
 ### A little better, every day.
 
-[Open the website](https://daily-routine-journal.onrender.com) · [Latest Android APK](https://github.com/AyushKJha/Daily_Routine_Tracker/releases/latest) · [Release notes](https://github.com/AyushKJha/Daily_Routine_Tracker/releases)
+[Open the website](https://daily-routine-journal.onrender.com) · [Download Android APK · 1.2.0](https://github.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v1.2.0/Daily-1.2.0.apk)
 
 A personal routine journal for planning habits, saving daily check-ins, and looking back at progress.
 
 **JavaScript · IndexedDB · Web Crypto · Supabase · Android / Java**
 
-## Start your routine
-
-1. Open the website and create a workspace. Save the workspace ID and recovery details shown during setup.
-2. Add habits, choose the weekdays for each one, and save your routine.
-3. Check in during the day and add an optional note. Use the weekly view to review progress and export a report.
-4. In Settings, optionally protect the workspace with a password. Download a JSON backup before moving devices or clearing browser data.
-5. To back up across devices, connect an email account in Cloud backup, then opt in to upload the encrypted workspace. On another device, sign in and unlock it with the workspace password or recovery key.
-
-For Android, install the latest APK from the release link above. Updates should be installed over the existing app to retain local records. Web and Android workspaces are separate; use a JSON backup to transfer records between them.
-
 ## What you can do
 
 - Create up to 12 habits with scheduled weekdays and pauses.
-- Save check-ins and notes with automatic saves and historical routine snapshots.
+- Save check-ins and notes, with automatic saves and historical routine snapshots.
 - Review weekly charts and export PDF, Excel, CSV, or JSON.
-- Encrypt a local workspace with an optional password.
+- Add a password to encrypt a local workspace.
 - Use the web app offline after its first successful load.
-- Set Android reminders, snooze, and quiet hours.
-- Optionally back up encrypted workspaces to Supabase while the app is open.
+- Install the Android app for local reminders, snooze, and quiet hours.
+- Optionally back up encrypted workspaces to your cloud account.
+
+## Try it
+
+The website needs no installation. On supported browsers, use **My routine → Install Daily** to add it to your home screen. Android requires **8+** and an up-to-date Android System WebView. Install APK updates over the existing app to retain records.
+
+Web and Android records are separate local workspaces. JSON backup can transfer records between them. Uninstalling the app or clearing browser data removes local records. Keep backups somewhere safe.
 
 ## How data works
 
-Journal records are stored in IndexedDB on the device. Cloud backup is optional and stores encrypted workspace data; email identifies the cloud account but does not unlock the journal. Your workspace password or recovery key is still required. Revision checks prevent silent overwrites between devices. Automatic background Android sync is not implemented.
+Journal data stays in IndexedDB on your device. Optional cloud backup stores only encrypted workspace envelopes in Supabase. Email sign-in identifies your cloud account; your workspace password (or recovery key) is still required to unlock the journal on each device. Uploads are opt-in and occur while the app is open. Devices use revision checks to prevent silent overwrites.
 
-JSON backups include plaintext notes. CSV, PDF, and Excel reports exclude notes. The coach uses saved check-ins on the device; it is not an external AI service. See [cloud usage query](cloud/usage.sql) for what account and backup activity it counts.
+JSON backups include plaintext notes. CSV, PDF, and Excel reports exclude notes. The coach uses saved check-ins on the device; it is not an external AI service.
+
+The usage query in [cloud/usage.sql](cloud/usage.sql) counts cloud accounts and backup activity, not offline-only users or app installations.
 
 ## Run locally
 
 Use Python 3.10+ from the repository root:
 
 ```sh
-git clone https://github.com/AyushKJha/Daily_Routine_Tracker.git
-cd Daily_Routine_Tracker
 python -m http.server 8000 --directory static --bind 127.0.0.1
 ```
 
@@ -66,8 +62,8 @@ npm test
 python -m unittest -v test_server
 ```
 
-These cover different components; passing server tests does not verify the browser interface. See [technical notes](TECHNICAL_NOTES.md) for storage behavior, export details, and verification scope.
+These cover different components; passing server tests does not verify the browser interface. See [technical notes](TECHNICAL_NOTES.md) for storage behavior, export details, and previous verification scope.
 
 ## Current boundaries
 
-Cloud uploads are opt-in and occur while the app is open. Email access alone cannot recover an encrypted journal. Browser reminders need the page to remain open; Android reminders may be delayed by the operating system. Physical-device behavior still needs verification.
+Cloud access needs an email account and an encrypted workspace password; email alone cannot recover the journal. Automatic background Android sync is not implemented. Android reminders may be delayed by the OS; physical-device behavior still needs verification.
