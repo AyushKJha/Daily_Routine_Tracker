@@ -1,8 +1,12 @@
 package com.ayushkjha.daily;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.Activity;import android.app.AlertDialog;
+import android.app.DownloadManager;
+import android.content.Context;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.os.Environment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -42,6 +46,9 @@ public final class MainActivity extends Activity {
     private byte[] pendingExport;
     private JavaScriptReplyProxy exportReply;
     private ValueCallback<Uri[]> importReply;
+    private long updateDownloadId=-1;
+    private String updateVersionName="";
+    private BroadcastReceiver updateReceiver;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override public void onCreate(Bundle state) {
@@ -59,6 +66,10 @@ public final class MainActivity extends Activity {
         web.setSaveEnabled(false);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
+        updateDownloadId=getPreferences(MODE_PRIVATE).getLong("updateDownloadId",-1);
+        updateVersionName=getPreferences(MODE_PRIVATE).getString("updateVersionName","");
+        updateReceiver=new BroadcastReceiver(){@Override public void onReceive(Context c,Intent i){if(DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(i.getAction())&&i.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID,-1)==updateDownloadId)showUpdateReady();}};
+        if(android.os.Build.VERSION.SDK_INT>=33)registerReceiver(updateReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),Context.RECEIVER_NOT_EXPORTED);else registerReceiver(updateReceiver,new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -118,6 +129,8 @@ public final class MainActivity extends Activity {
                         else if ("reminderStatus".equals(request.optString("action"))) reminderResult(reply,ReminderManager.enabled(this)?"Android reminder is enabled. Delivery may be delayed by battery saving.":"Android reminders are off.");
                         else if ("snooze".equals(request.optString("action"))) { ReminderManager.snooze(this);reminderResult(reply,ReminderManager.enabled(this)?"Snoozed for 30 minutes, respecting quiet hours.":"Enable reminders first."); }
                         else if ("checkUpdate".equals(request.optString("action"))) checkUpdate(reply);
+                        else if ("downloadUpdate".equals(request.optString("action"))) downloadUpdate(request,reply);
+                        else if ("installUpdate".equals(request.optString("action"))) installUpdate();
                         else if ("save".equals(request.optString("action"))) save(request, reply);
                         else if ("print".equals(request.optString("action"))) {
                             PrintManager manager = (PrintManager) getSystemService(PRINT_SERVICE);
@@ -152,6 +165,10 @@ public final class MainActivity extends Activity {
             result.put("kind","update");result.put("available",result.optInt("versionCode")>BuildConfig.VERSION_CODE);runOnUiThread(()->{try{reply.postMessage(result.toString());}catch(Exception ignored){}});
         }catch(Exception error){runOnUiThread(()->{try{reply.postMessage("Update check unavailable. Your offline journal still works.");}catch(Exception ignored){}});}});
     }
+
+    private void downloadUpdate(JSONObject request,JavaScriptReplyProxy reply){String url=request.optString("url");if(!url.matches("https://github\\.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v[0-9.]+/Daily-[0-9.]+\\.apk")){reply.postMessage("The update link could not be verified.");return;}try{DownloadManager m=(DownloadManager)getSystemService(DOWNLOAD_SERVICE);if(updateDownloadId!=-1)try(android.database.Cursor c=m.query(new DownloadManager.Query().setFilterById(updateDownloadId))){if(c!=null&&c.moveToFirst()){int s=c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));if(s==DownloadManager.STATUS_SUCCESSFUL){showUpdateReady();return;}if(s==DownloadManager.STATUS_PENDING||s==DownloadManager.STATUS_RUNNING||s==DownloadManager.STATUS_PAUSED){reply.postMessage("Daily update is already downloading.");return;}}}updateVersionName=request.optString("versionName","new version");DownloadManager.Request r=new DownloadManager.Request(Uri.parse(url));r.setTitle("Daily update · "+updateVersionName);r.setDescription("Downloading the signed Daily update");r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);r.setDestinationInExternalFilesDir(this,Environment.DIRECTORY_DOWNLOADS,"Daily-update.apk");updateDownloadId=m.enqueue(r);getPreferences(MODE_PRIVATE).edit().putLong("updateDownloadId",updateDownloadId).putString("updateVersionName",updateVersionName).apply();JSONObject result=new JSONObject();result.put("kind","updateDownload");result.put("message","Downloading Daily "+updateVersionName+" in the background.");reply.postMessage(result.toString());}catch(Exception e){reply.postMessage("Could not start the update download. Check your connection and retry.");}}
+    private void showUpdateReady(){if(web==null||updateDownloadId==-1)return;try{DownloadManager m=(DownloadManager)getSystemService(DOWNLOAD_SERVICE);try(android.database.Cursor c=m.query(new DownloadManager.Query().setFilterById(updateDownloadId))){if(c==null||!c.moveToFirst())return;int s=c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));if(s==DownloadManager.STATUS_FAILED){web.evaluateJavascript("(()=>{let p=document.querySelector('#android-update p');if(p)p.textContent='Update download failed. Check your connection and try again.'})()",null);return;}if(s!=DownloadManager.STATUS_SUCCESSFUL)return;}String v=JSONObject.quote(updateVersionName);web.evaluateJavascript("(()=>{let b=document.querySelector('#android-update');if(!b){b=document.createElement('aside');b.id='android-update';b.className='backup-prompt';document.querySelector('.workspace header')?.after(b)}b.replaceChildren();let p=document.createElement('p');p.textContent='Daily '+"+v+"+' is downloaded. Android will ask you to confirm installation.';b.append(p);let x=document.createElement('button');x.className='secondary';x.type='button';x.textContent='Install update';x.onclick=()=>DailyAndroid.postMessage(JSON.stringify({action:'installUpdate'}));b.append(x)})()",null);}catch(Exception ignored){}}
+    private void installUpdate(){if(updateDownloadId==-1)return;try{if(android.os.Build.VERSION.SDK_INT>=26&&!getPackageManager().canRequestPackageInstalls()){startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getPackageName())));Toast.makeText(this,"Allow Daily to install its update, then return and tap Install update.",Toast.LENGTH_LONG).show();return;}DownloadManager m=(DownloadManager)getSystemService(DOWNLOAD_SERVICE);try(android.database.Cursor c=m.query(new DownloadManager.Query().setFilterById(updateDownloadId))){if(c==null||!c.moveToFirst()||c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))!=DownloadManager.STATUS_SUCCESSFUL){Toast.makeText(this,"The update is still downloading.",Toast.LENGTH_LONG).show();return;}Uri apk=m.getUriForDownloadedFile(updateDownloadId);if(apk==null)throw new java.io.IOException();startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(apk,"application/vnd.android.package-archive").addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION));}}catch(Exception e){Toast.makeText(this,"Android could not open the installer. Try the download notification.",Toast.LENGTH_LONG).show();}}
 
     private static boolean isLocal(Uri uri) {
         return "https".equals(uri.getScheme()) && "appassets.androidplatform.net".equals(uri.getHost())
@@ -225,6 +242,7 @@ public final class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        if(updateReceiver!=null){try{unregisterReceiver(updateReceiver);}catch(Exception ignored){}}
         if (importReply != null) importReply.onReceiveValue(null);
         pendingExport = null;
         exportReply = null;
