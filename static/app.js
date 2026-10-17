@@ -30,9 +30,11 @@ window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.return
 
 
 
+
+
+
+
 $('#backup-settings').onclick=()=>$('#export').click();
 $('#export-csv').onclick=async()=>{try{const data=await api('/export');const safe=v=>{let t=String(v??'');if(/^[=+@\-\t\r]/.test(t))t="'"+t;return '"'+t.replace(/"/g,'""')+'"';};const columns=new Map(data.habits.map(h=>[h.id,h.label]));for(const d of data.days)for(const h of d.routine||[])if(!columns.has(h.id))columns.set(h.id,h.label);const header=['Date','Completion percent',...columns.values()];const rows=data.days.map(d=>[d.date,d.score,...[...columns.keys()].map(id=>!DailyRoutine.eligible(d).includes(id)?'Not scheduled':d.crosses[id]?'Skipped':d.habits[id]?'Complete':'Not completed')]);const csv='\uFEFF'+[header,...rows].map(row=>row.map(safe).join(',')).join('\r\n');downloadFile(csv,'text/csv;charset=utf-8','daily-progress-'+localDate()+'.csv');toast('CSV exported. Open it in Excel or import it into Google Sheets.');}catch(e){toast(e.message,true);}};
 function downloadFile(text,type,name){const url=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('#import-backup').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>5000000)throw new Error('Choose a backup under 5 MB.');const backup=JSON.parse(await file.text());DailyStorage.validateBackup(backup);if(!confirm('Restore this backup? Days with matching dates will replace the copies in this browser. Other saved days will be kept. Unsaved edits will be discarded.'))return;if(!await window.DailyUpgrade.flush())throw new Error('Resolve unsaved edits before restoring.');await DailyStorage.restore(backup);user=await api('/auth/me');await start();toast('Backup restored on this device.');}catch(error){toast('Could not restore: '+error.message,true);}finally{e.target.value='';}};
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-if(navigator.storage?.persist)navigator.storage.persist().then(granted=>{const el=$('#storage-status');if(el)el.textContent=granted?'Persistent browser storage granted. Backups are still recommended.':'Browser storage is available; download backups regularly to protect your records.';}).catch(()=>{});
