@@ -3,7 +3,7 @@
 # Daily
 ### A little better, every day.
 
-[Open the website](https://daily-routine-journal.onrender.com) · [Download Android APK · 1.2.0](https://github.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v1.2.0/Daily-1.2.0.apk)
+[Open the website](https://daily-routine-journal.onrender.com) · [Download Android APK · 1.3.0](https://github.com/AyushKJha/Daily_Routine_Tracker/releases/download/android-v1.3.0/Daily-1.3.0.apk)
 
 A personal routine journal for planning habits, saving daily check-ins, and looking back at progress.
 
