@@ -14,3 +14,10 @@ android/app/src/main/res/drawable/daily_icon.png
 *.p12
 *.jks
 *.keystore
+# Local editor and assistant tooling
+.claude/
+.codex/
+.cursor/
+.aider*
+CLAUDE.md
+AGENTS.md
